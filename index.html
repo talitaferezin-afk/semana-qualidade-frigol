@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101b58">
+  <title>Semana da Qualidade | FRIGOL</title>
+  <style>
+    :root { --navy:#101b58; --red:#ed1c2e; --white:#fff; }
+    * { box-sizing:border-box; }
+    body {
+      margin:0; min-height:100vh; font-family:Arial,Helvetica,sans-serif;
+      background:#f4f6fb; color:var(--navy); display:flex; justify-content:center;
+    }
+    .app { width:100%; max-width:480px; padding:20px 16px 28px; text-align:center; }
+    .intro { margin:0 auto 16px; }
+    h1 { font-size:1.45rem; line-height:1.15; margin:0 0 7px; color:var(--navy); }
+    .intro p { margin:0; font-size:.95rem; color:#3c456b; line-height:1.4; }
+    .stage {
+      width:100%; aspect-ratio:941 / 1672; position:relative; overflow:hidden;
+      border-radius:14px; background:#dfe4ef; box-shadow:0 8px 26px #101b581a;
+    }
+    video, canvas.preview, img.frame {
+      position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+    }
+    video { transform:scaleX(-1); }
+    img.frame { pointer-events:none; object-fit:fill; }
+    canvas.preview { display:none; }
+    .placeholder {
+      position:absolute; inset:0; display:flex; flex-direction:column;
+      align-items:center; justify-content:center; padding:28px; color:#101b58;
+      background:linear-gradient(145deg,#fff,#e9edf8);
+    }
+    .placeholder strong { font-size:1.15rem; margin-bottom:8px; }
+    .placeholder span { font-size:.92rem; line-height:1.45; }
+    .controls { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px; }
+    button, .button {
+      border:0; border-radius:999px; padding:14px 12px; min-height:48px;
+      font-size:.95rem; font-weight:700; cursor:pointer; text-decoration:none;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .primary { background:var(--navy); color:#fff; }
+    .secondary { background:#fff; color:var(--navy); border:2px solid var(--navy); }
+    .accent { background:var(--red); color:#fff; }
+    button:disabled { opacity:.45; cursor:not-allowed; }
+    .full { grid-column:1 / -1; }
+    .status { min-height:1.35em; margin:12px 0 0; font-size:.88rem; line-height:1.4; color:#3c456b; }
+    .small { margin-top:15px; color:#68708e; font-size:.78rem; line-height:1.45; }
+    .hidden { display:none !important; }
+    @media (max-width:360px) {
+      .app { padding:14px 10px 22px; }
+      h1 { font-size:1.25rem; }
+      button,.button { font-size:.86rem; padding:12px 8px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="intro">
+      <h1>Semana da Qualidade</h1>
+      <p>Faça sua selfie com a moldura da FRIGOL!</p>
+    </header>
+
+    <section class="stage" aria-label="Prévia da selfie">
+      <div class="placeholder" id="placeholder">
+        <strong>Sua selfie começa aqui 💙❤️</strong>
+        <span>Toque em “Ativar câmera” e permita o acesso à câmera do celular.</span>
+      </div>
+      <video id="video" autoplay playsinline muted class="hidden"></video>
+      <canvas id="preview" class="preview"></canvas>
+      <img class="frame" src="moldura-frigol.png" alt="Moldura Semana da Qualidade FRIGOL">
+    </section>
+
+    <div class="controls">
+      <button id="start" class="primary full">Ativar câmera</button>
+      <button id="capture" class="accent" disabled>Tirar selfie</button>
+      <button id="retake" class="secondary" disabled>Tirar outra</button>
+      <a id="download" class="button primary hidden" download="selfie-semana-da-qualidade-frigol.png">Salvar foto</a>
+      <button id="instagram" class="secondary hidden">Abrir Instagram</button>
+    </div>
+    <p class="status" id="status" role="status" aria-live="polite"></p>
+    <p class="small">Dica: use o celular na vertical e deixe o rosto dentro da área central. A câmera só será ativada depois da sua permissão.</p>
+  </main>
+
+<script>
+(() => {
+  const video = document.getElementById('video');
+  const placeholder = document.getElementById('placeholder');
+  const preview = document.getElementById('preview');
+  const ctx = preview.getContext('2d');
+  const frame = new Image();
+  frame.src = 'moldura-frigol.png';
+  const startBtn = document.getElementById('start');
+  const captureBtn = document.getElementById('capture');
+  const retakeBtn = document.getElementById('retake');
+  const download = document.getElementById('download');
+  const instagramBtn = document.getElementById('instagram');
+  const status = document.getElementById('status');
+  let stream = null;
+  let captured = false;
+
+  function say(message) { status.textContent = message; }
+
+  async function startCamera() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      say('Este navegador não liberou o acesso à câmera. Abra a página por um link HTTPS atualizado e tente novamente.');
+      return;
+    }
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: { facingMode: 'user', width: { ideal: 1080 }, height: { ideal: 1920 } }
+      });
+      video.srcObject = stream;
+      await video.play();
+      video.classList.remove('hidden');
+      placeholder.classList.add('hidden');
+      preview.style.display = 'none';
+      startBtn.textContent = 'Câmera ativada';
+      startBtn.disabled = true;
+      captureBtn.disabled = false;
+      retakeBtn.disabled = true;
+      say('Tudo pronto! Sorria e toque em “Tirar selfie”.');
+    } catch (error) {
+      say('Não conseguimos abrir a câmera. Confira a permissão do navegador e tente novamente.');
+    }
+  }
+
+  function drawCover(image, targetCtx, width, height, mirror) {
+    const iw = image.videoWidth || image.naturalWidth || image.width;
+    const ih = image.videoHeight || image.naturalHeight || image.height;
+    const scale = Math.max(width / iw, height / ih);
+    const sw = width / scale, sh = height / scale;
+    const sx = (iw - sw) / 2, sy = (ih - sh) / 2;
+    targetCtx.save();
+    if (mirror) {
+      targetCtx.translate(width, 0);
+      targetCtx.scale(-1, 1);
+    }
+    targetCtx.drawImage(image, sx, sy, sw, sh, 0, 0, width, height);
+    targetCtx.restore();
+  }
+
+  function capturePhoto() {
+    if (!stream || !video.videoWidth) return;
+    const width = 1080, height = Math.round(width * 1672 / 941);
+    preview.width = width;
+    preview.height = height;
+    ctx.clearRect(0, 0, width, height);
+    drawCover(video, ctx, width, height, true);
+    if (frame.complete && frame.naturalWidth) {
+      ctx.drawImage(frame, 0, 0, width, height);
+    } else {
+      frame.onload = () => ctx.drawImage(frame, 0, 0, width, height);
+    }
+    video.classList.add('hidden');
+    preview.style.display = 'block';
+    captured = true;
+    captureBtn.disabled = true;
+    retakeBtn.disabled = false;
+    download.href = preview.toDataURL('image/png');
+    download.classList.remove('hidden');
+    instagramBtn.classList.remove('hidden');
+    say('Selfie pronta! Salve a imagem e depois abra o Instagram para publicar nos Stories.');
+  }
+
+  function retake() {
+    captured = false;
+    preview.style.display = 'none';
+    video.classList.remove('hidden');
+    captureBtn.disabled = false;
+    retakeBtn.disabled = true;
+    download.classList.add('hidden');
+    instagramBtn.classList.add('hidden');
+    say('Pode tirar outra selfie quando quiser.');
+  }
+
+  startBtn.addEventListener('click', startCamera);
+  captureBtn.addEventListener('click', capturePhoto);
+  retakeBtn.addEventListener('click', retake);
+  instagramBtn.addEventListener('click', () => {
+    window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer');
+  });
+  window.addEventListener('pagehide', () => {
+    if (stream) stream.getTracks().forEach(track => track.stop());
+  });
+})();
+</script>
+</body>
+</html>

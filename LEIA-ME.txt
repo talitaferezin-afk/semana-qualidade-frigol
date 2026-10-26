@@ -1,0 +1,20 @@
+FRIGOL | Semana da Qualidade | Página de selfie
+
+ARQUIVOS
+- index.html: página da experiência
+- moldura-frigol.png: moldura PNG com transparência
+
+COMO TESTAR
+1. Abra index.html em um navegador compatível. A câmera geralmente só funciona em localhost ou em um site HTTPS publicado.
+2. Para publicar gratuitamente, crie uma conta no GitHub e um repositório público.
+3. Envie index.html e moldura-frigol.png para a raiz do repositório.
+4. Em Settings > Pages, selecione Deploy from a branch, escolha a branch main e a pasta /(root), e salve.
+5. Depois que o GitHub Pages publicar o site, abra o endereço HTTPS no celular e teste a câmera.
+6. Use o endereço publicado para criar o QR Code.
+
+OBSERVAÇÕES
+- Esta é uma primeira versão funcional, não um filtro nativo do Instagram.
+- A pessoa precisa permitir o acesso à câmera.
+- O botão “Salvar foto” baixa a imagem composta. O botão Instagram abre o Instagram; por segurança do navegador, a publicação nos Stories precisa ser concluída manualmente.
+- Teste em iPhone e Android antes de divulgar o QR Code.
+- A moldura é usada como PNG sobre a imagem da câmera. Confirme visualmente o alinhamento e a transparência antes de lançar.
